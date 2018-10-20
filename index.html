@@ -1,0 +1,3481 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <style>
+    body { margin:0 auto;}
+        h1,h2,p {
+      margin:0px;
+    }
+    svg {
+	  margin-left:auto; margin-right:auto; display:block;
+    }
+    
+    .axis {
+	  font: 10px sans-serif;
+		}
+    
+    .axis path,
+	  .axis line {
+	  fill: none;
+	  stroke: #000;
+	  shape-rendering: crispEdges;
+	}
+    .tooltip {
+  position: absolute;
+  width: 150px;
+  height: 35px;
+  pointer-events: none;
+}
+    
+  </style>
+  
+</head>
+<body>
+
+<h1 align="center">Hurtos a viviendas en Colombia</h1>
+     <h2 align="center">?Te sientes Seguro.....?</h2>
+  <h3 align="center">Año 2018</h3>
+ 
+  <p align="center" id="major">Policia Nacional</p>
+  <p align="center" id="major">................</p>
+  <p align="center" id="major">StreamGraph </p>
+  <div id="uno"></div>
+  <script>
+
+  
+var parseTime = d3.timeParse("%Y%m%d");
+var eventos = new Object();
+    
+d3.csv('hurtoresidencias.csv', function(err, d){
+  if(err) console.log(err);
+ 
+  /* Data Processing*/
+
+  armas=[];
+	
+			
+	d.forEach(function(d){
+  	if(!armas.includes(d.Arma)){
+ 		armas.push(d.Arma);
+ 	}
+	if(eventos[d.Arma]==undefined){
+		eventos[d.Arma]=0;
+		}else{
+	eventos[d.Arma]++;
+	}
+ 	
+ }
+ )
+ 
+  
+   nested_data = d3.nest()
+ 			.key(function(d){return d.Fecha;})
+ 			.key(function(d){return d.Arma;})
+ 			.rollup(function(v){return v.length;})
+ 			.entries(d);
+			
+	datafull =[];
+	
+	nested_data.forEach(function(d){
+		datosok = new Object();
+		item = new Object();
+		datosok.month =   parseTime(d.key);
+		item = d.values;
+		item.forEach(function(di){
+		var caracter = di.key;
+		var numero = di.value;
+			datosok [caracter]= di.value.toString();
+		});
+		
+		datafull.push(datosok);
+})
+  
+  datafull.forEach(function(d){
+	llave =d3.keys(d);
+	armas.forEach(function(k){
+			if(!llave.includes(k)){
+				d[k]=0;
+			}
+			
+		})
+
+})
+/* End Data Processing*/
+
+   DrawGraph(datafull,armas);
+ 
+})
+
+
+function DrawGraph(mqpdata,armas) {
+var data = mqpdata;
+  
+
+var stack = d3.stack()
+    .keys(armas)
+	.order(d3.stackOrderNone)
+    .offset(d3.stackOffsetWiggle);
+
+var series = stack(data);
+
+var width = 850,
+    height = 500;
+
+var x = d3.scaleTime()
+    .domain(d3.extent(data, function(d){ return d.month; }))
+    .range([100, width]);
+var xAxis = d3.axisBottom(x);
+  
+var y = d3.scaleLinear()
+    .domain([0, d3.max(series, function(layer) { return d3.max(layer, function(d){ return d[0] + d[1];}); })])
+    .range([height/2, -200]);
+
+var color = d3.scaleLinear()
+    .range(["#51D0D7", "#31B5BB"]);
+
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+var area = d3.area()
+    .x(function(d) {  return x(d.data.month); })
+    .y0(function(d) { return y(d[0]); })
+    .y1(function(d) { return y(d[1]); })
+    .curve(d3.curveBasis);
+
+  var tooltip = d3.select("body").append("div")
+	.attr("class", "tooltip");
+  
+var svg = d3.select("#uno").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.selectAll("path")
+    .data(series)
+    .enter().append("path")
+    .attr("d", area)
+    .style("fill", function() { return color(Math.random()); })
+    .on('mouseover', function(d){      
+      d3.select(this).style('fill',d3.rgb( d3.select(this).style("fill") ).brighter());
+  		d3.select("#major").text("Modus Operandi :" +d.key);    //color(d.key));
+		
+		
+  tooltip.transition()
+               .duration(700)
+               .style("opacity", 1);
+  			tooltip.html("Eventos: " + eventos[d.key])
+               .style("left", (d3.event.pageX +5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+    })
+    .on('mouseout', function(d){      
+      d3.select(this).style('fill', 
+         d3.rgb( d3.select(this).style("fill") ).darker());
+         d3.select("#major").text("Deslice Mouse");
+  tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+})
+
+svg.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + (height) + ")")
+            .call(xAxis);  
+  
+  var xAxisGroup = svg.append("g").call(xAxis);
+}
+   
+  </script>
+  
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+<title>hurtos</title>
+
+<!-- Bootstrap core CSS -->
+    <link href="hom3/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+   
+      <link rel="stylesheet" href="//code.getmdl.io/1.3.0/material.deep_purple-pink.min.css">
+
+
+ 
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/d3-queue/3.0.3/d3-queue.js'></script>		
+ <style>
+      .lead{
+        text-align: justify;
+      }
+      #linechart {
+         margin: 0 auto;
+
+      }
+
+      .overlay {
+        fill: none;
+        pointer-events: all;
+      }
+
+      text {
+        font-size: 10px;
+        font-family: sans-serif;
+      }
+
+      #date-text{
+        font-size: 16px;
+        font-weight: bold;
+        font-style: italic;
+      }
+	  
+	  #valor-text{
+        font-size: 14px;
+        font-style: italic;
+      }
+      .lineSeries{
+         cursor: pointer;
+      }
+    </style>
+    <div class="container">
+
+      <!-- Jumbotron Header -->
+	  <p align="center" id="major">Multi-Line Chart </p>
+        
+  
+      <!-- Page Features -->
+      <div class="row text-center">
+
+        <div class="col-lg-8 col-md-6 mb-4">
+          <div id="linechart"></div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div id="categories"></div>
+        </div>
+     </div>
+
+     <div class="container">
+	 
+	  
+
+       
+          <div>
+		  
+
+
+		  </div>
+
+        <div class="col-lg-8 col-md-6 mb-4">
+          <div class="mdl-card__supporting-text">
+            <div id='heatmapChart'></div>
+          </div>
+        </div>
+     </div>
+      <!-- /.row -->
+
+    </div>
+	
+	 
+  
+
+
+<script src="hom3/jquery/jquery.min.js"></script>
+    <script src="hom3/popper/popper.min.js"></script>
+    <script src="hom3/bootstrap/js/bootstrap.min.js"></script>
+<script>
+
+
+
+
+var width = $("#linechart").width();
+var svg = d3.select('#linechart')
+			.append('svg')
+			.attr('height', '600px')
+			.attr('width',width );
+var svg2 = d3.select("#categories")
+			.append('svg')
+			.attr('height', '600px')
+			.attr('width', $("#categories").width());
+
+var parseTime = d3.timeParse("%Y%m%d");
+
+minimo =0;
+maximo=0;
+
+
+d3.csv("hurtoresidencias.csv").then( function(data) {
+
+ /* Data Processing*/
+data.sort(function(x, y){
+   return d3.ascending(x.Fecha, y.Fecha);
+});
+
+
+var armas=[];
+
+ data.forEach(function(d){
+  	if(!armas.includes(d.Arma)){
+ 		armas.push(d.Arma);
+ 	}
+ 	
+ }
+ )
+ data = d3.nest()
+ 			.key(function(d){return d.Fecha;})
+ 			.key(function(d){return d.Arma;})
+ 			.rollup(function(v){return v.length;})
+
+ 			.entries(data);
+
+datafull =[];
+
+data.forEach(function(d){
+datosok = new Object();
+item = new Object();
+datosok.date = d.key;
+item = d.values;
+	item.forEach(function(di){
+		llave = di.key;
+		datosok[llave] = di.value
+
+	})
+
+datafull.push(datosok);
+})
+
+data = datafull;
+datafull =[];
+data.forEach(function(d){
+llave =d3.keys(d);
+	armas.forEach(function(k){
+			if(maximo<d[k]){maximo = d[k]; }
+			if(!llave.includes(k)){
+				d[k]=0;
+			}
+			
+	})
+})
+
+data.forEach(function(d){
+d.date = parseTime(d.date);
+
+})
+
+/* Data Processing*/
+
+
+var escalax_ini = d3.scaleTime()
+    .range([40,  width])
+    .domain(d3.extent(data, function(d) { return d.date; }));
+escalax = escalax_ini.copy();
+
+	var escalay = d3.scaleLinear()
+    .range([500, 2])
+    .domain([minimo,maximo]);
+   var xAxis = d3.axisBottom(escalax).ticks(6);
+    var yAxis = d3.axisLeft(escalay);
+
+var xAxisG = svg.append('g')
+      .attr('id', 'xAxisG')
+     .attr('transform', 'translate(0,500)')
+      .call(xAxis);
+
+    var yAxisG = svg.append('g')
+      .attr('id', 'yAxisG')
+      .attr('transform', 'translate(40,0)')
+      .call(yAxis)
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("fill", "#000")
+      .text("hurtoresidencias");
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+
+
+    var linesG = svg.append('g');
+
+    var legend = svg2.append('g')
+      .attr('id', 'legend')
+      
+ var dateText = svg.append('text')
+      .attr('id', 'date-text')
+      .attr('class', 'legend-text')
+      .attr('x', width/2)
+      .attr('y', 15);
+
+   var lines = {};
+    var paths = {};
+     var index =  armas.length;
+
+
+for(k in armas){
+	key = armas[k];
+	var line = d3.line()	
+ 	 .x(d => escalax(d.date))
+  	.y(d => escalay(d[key]))
+  	.curve(d3.curveCatmullRom.alpha(0.5));
+  	lines[key] = line;
+        path = linesG.append('path')
+          .attr('d', line(data))
+          .attr('id', key)
+          .attr('fill', 'none')
+          .attr('stroke', function(d) { return color(key); })
+          .attr('stroke-width', 2)
+          .attr('opacity', 1);
+          
+var totalLength = path.node().getTotalLength();
+
+		path
+          .attr('stroke-dasharray', totalLength + ' ' + totalLength)
+          .attr('stroke-dashoffset', totalLength)
+          .transition()
+          .duration(2000)
+            .ease(d3.easeCubicInOut)
+          .attr('stroke-dashoffset', 0);
+
+        paths[key] = path;
+
+        var idtext= key.replace(" / ", "");
+        idtext = 'text'+ idtext.replace(/\s/g, "");
+
+		legend.append('text')
+		.text("Cantidad Eventos: ")
+		 .attr('x', 0)
+		  .attr('y', 90)
+		        .attr('id', 'valor-text')
+      .attr('class', 'legend-text');
+		
+
+        legend.append('text')
+          .text(key)
+          .attr('id', idtext)
+          .attr('class', 'legend-text-s')
+          .attr('x', 25)
+		  .attr('fill', color(key))
+          .attr('y', function() {
+            return 40 * index + 80;
+          })
+        index--;
+
+}	
+
+ var focus = svg.append('g')
+      .attr('class', 'focus')
+      .style('display', 'none');
+			focus.append("circle")
+				.attr("class","y")
+				.attr("fill","none")
+				.attr("stroke","black")
+				.style("opacity",0.8)
+				.attr("r",3);
+				
+			// add vertical line at intersection
+			focus.append("line")
+				.attr("class","y")
+				.attr("stroke","black")
+				.attr("stroke-dasharray","3,3")
+				.style("opacity",1.5)
+				.attr("y1", 0)
+				.attr("y2", 520);
+			svg.append("rect")
+				.attr("width",width)
+				.attr("height",520)
+				.style("fill","none")
+				.style("pointer-events","all")
+				.on("mouseover", function() { focus.style("display", null); })
+				.on("mouseout", function() { focus.style("display", "none"); })
+				.on("mousemove", mousemove);
+
+	  
+
+   var bisectDate = d3.bisector(function(d) { return new Date(d.date); }).left;
+	
+    function mousemove() {
+      var x = d3.mouse(this)[0];
+      var x0 = escalax.invert(d3.mouse(this)[0]),
+        i = bisectDate(data, x0, 1),
+        d0 = data[i - 1],
+        d1 = data[i],
+        d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+
+
+      focus.style('display', 'block');
+      dateText.style('display', 'block');
+      legend
+        .transition()
+        .duration(90)
+
+      focus.attr("transform", "translate(" + escalax( new Date(d.date)) + ",0)");
+
+      var date = d.date;
+      date = date.toUTCString().split(' ');
+      date = date[0] + ' ' + date[1] + ' ' + date[2] + ' ' + date[3];
+
+      dateText.text(date);
+
+      for (k in armas) {
+      	key = armas[k];
+    
+          var newText = key + ": " + Number(d[key]).toLocaleString();
+          	
+          	var idtext= key.replace(" / ", "");
+            idtext = '#text'+ idtext.replace(/\s/g, "");
+            $(idtext).html(newText);
+      }
+    }
+
+	
+});
+
+
+</script>
+
+</body>
+</html>
+
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 15">
+<meta name=Originator content="Microsoft Word 15">
+<link rel=File-List
+href="Abstraccion%20WHAT%20-%20copiafinal_archivos/filelist.xml">
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>rj santa+</o:Author>
+  <o:LastAuthor>rj santa+</o:LastAuthor>
+  <o:Revision>3</o:Revision>
+  <o:TotalTime>738</o:TotalTime>
+  <o:Created>2018-10-19T22:53:00Z</o:Created>
+  <o:LastSaved>2018-10-19T23:00:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>1048</o:Words>
+  <o:Characters>5766</o:Characters>
+  <o:Lines>48</o:Lines>
+  <o:Paragraphs>13</o:Paragraphs>
+  <o:CharactersWithSpaces>6801</o:CharactersWithSpaces>
+  <o:Version>16.00</o:Version>
+ </o:DocumentProperties>
+ <o:OfficeDocumentSettings>
+  <o:AllowPNG/>
+ </o:OfficeDocumentSettings>
+</xml><![endif]-->
+<link rel=dataStoreItem
+href="Abstraccion%20WHAT%20-%20copiafinal_archivos/item0006.xml"
+target="Abstraccion%20WHAT%20-%20copiafinal_archivos/props007.xml">
+<link rel=themeData
+href="Abstraccion%20WHAT%20-%20copiafinal_archivos/themedata.thmx">
+<link rel=colorSchemeMapping
+href="Abstraccion%20WHAT%20-%20copiafinal_archivos/colorschememapping.xml">
+<!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:Zoom>90</w:Zoom>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:TrackMoves>false</w:TrackMoves>
+  <w:TrackFormatting/>
+  <w:HyphenationZone>21</w:HyphenationZone>
+  <w:PunctuationKerning/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:DoNotPromoteQF/>
+  <w:LidThemeOther>ES-CO</w:LidThemeOther>
+  <w:LidThemeAsian>X-NONE</w:LidThemeAsian>
+  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+   <w:DontGrowAutofit/>
+   <w:SplitPgBreakAndParaMark/>
+   <w:EnableOpenTypeKerning/>
+   <w:DontFlipMirrorIndents/>
+   <w:OverrideTableStyleHps/>
+  </w:Compatibility>
+  <m:mathPr>
+   <m:mathFont m:val="Cambria Math"/>
+   <m:brkBin m:val="before"/>
+   <m:brkBinSub m:val="&#45;-"/>
+   <m:smallFrac m:val="off"/>
+   <m:dispDef/>
+   <m:lMargin m:val="0"/>
+   <m:rMargin m:val="0"/>
+   <m:defJc m:val="centerGroup"/>
+   <m:wrapIndent m:val="1440"/>
+   <m:intLim m:val="subSup"/>
+   <m:naryLim m:val="undOvr"/>
+  </m:mathPr></w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" DefUnhideWhenUsed="false"
+  DefSemiHidden="false" DefQFormat="false" DefPriority="99"
+  LatentStyleCount="375">
+  <w:LsdException Locked="false" Priority="0" QFormat="true" Name="Normal"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 1"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 2"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 3"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 4"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 5"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 6"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 7"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 8"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 9"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 1"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 2"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 3"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 4"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 5"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 6"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 7"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 8"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footnote text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="header"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footer"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index heading"/>
+  <w:LsdException Locked="false" Priority="35" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="caption"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="table of figures"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="envelope address"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="envelope return"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footnote reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="line number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="page number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="endnote reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="endnote text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="table of authorities"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="macro"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="toa heading"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 5"/>
+  <w:LsdException Locked="false" Priority="10" QFormat="true" Name="Title"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Closing"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Signature"/>
+  <w:LsdException Locked="false" Priority="1" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Default Paragraph Font"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Message Header"/>
+  <w:LsdException Locked="false" Priority="11" QFormat="true" Name="Subtitle"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Salutation"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Date"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text First Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text First Indent 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Note Heading"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Block Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Hyperlink"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="FollowedHyperlink"/>
+  <w:LsdException Locked="false" Priority="22" QFormat="true" Name="Strong"/>
+  <w:LsdException Locked="false" Priority="20" QFormat="true" Name="Emphasis"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Document Map"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Plain Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="E-mail Signature"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Top of Form"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Bottom of Form"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal (Web)"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Acronym"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Address"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Cite"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Code"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Definition"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Keyboard"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Preformatted"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Sample"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Typewriter"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Variable"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal Table"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation subject"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="No List"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Outline List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Simple 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Classic 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Colorful 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Columns 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Grid 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table List 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table 3D effects 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Contemporary"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Elegant"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Professional"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Subtle 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Subtle 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Web 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Balloon Text"/>
+  <w:LsdException Locked="false" Priority="39" Name="Table Grid"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Table Theme"/>
+  <w:LsdException Locked="false" SemiHidden="true" Name="Placeholder Text"/>
+  <w:LsdException Locked="false" Priority="1" QFormat="true" Name="No Spacing"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 1"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" Name="Revision"/>
+  <w:LsdException Locked="false" Priority="34" QFormat="true"
+   Name="List Paragraph"/>
+  <w:LsdException Locked="false" Priority="29" QFormat="true" Name="Quote"/>
+  <w:LsdException Locked="false" Priority="30" QFormat="true"
+   Name="Intense Quote"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 1"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 1"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 2"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 2"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 2"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 3"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 3"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 3"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 4"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 4"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 4"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 5"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 5"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 5"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 6"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 6"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 6"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="19" QFormat="true"
+   Name="Subtle Emphasis"/>
+  <w:LsdException Locked="false" Priority="21" QFormat="true"
+   Name="Intense Emphasis"/>
+  <w:LsdException Locked="false" Priority="31" QFormat="true"
+   Name="Subtle Reference"/>
+  <w:LsdException Locked="false" Priority="32" QFormat="true"
+   Name="Intense Reference"/>
+  <w:LsdException Locked="false" Priority="33" QFormat="true" Name="Book Title"/>
+  <w:LsdException Locked="false" Priority="37" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Bibliography"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="TOC Heading"/>
+  <w:LsdException Locked="false" Priority="41" Name="Plain Table 1"/>
+  <w:LsdException Locked="false" Priority="42" Name="Plain Table 2"/>
+  <w:LsdException Locked="false" Priority="43" Name="Plain Table 3"/>
+  <w:LsdException Locked="false" Priority="44" Name="Plain Table 4"/>
+  <w:LsdException Locked="false" Priority="45" Name="Plain Table 5"/>
+  <w:LsdException Locked="false" Priority="40" Name="Grid Table Light"/>
+  <w:LsdException Locked="false" Priority="46" Name="Grid Table 1 Light"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark"/>
+  <w:LsdException Locked="false" Priority="51" Name="Grid Table 6 Colorful"/>
+  <w:LsdException Locked="false" Priority="52" Name="Grid Table 7 Colorful"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 1"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 1"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 1"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 2"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 2"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 2"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 3"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 3"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 3"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 4"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 4"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 5"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 5"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 5"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="Grid Table 1 Light Accent 6"/>
+  <w:LsdException Locked="false" Priority="47" Name="Grid Table 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="48" Name="Grid Table 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="49" Name="Grid Table 4 Accent 6"/>
+  <w:LsdException Locked="false" Priority="50" Name="Grid Table 5 Dark Accent 6"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="Grid Table 6 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="Grid Table 7 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="46" Name="List Table 1 Light"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark"/>
+  <w:LsdException Locked="false" Priority="51" Name="List Table 6 Colorful"/>
+  <w:LsdException Locked="false" Priority="52" Name="List Table 7 Colorful"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 1"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 1"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 1"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 1"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 2"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 2"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 2"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 2"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 3"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 3"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 3"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 3"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 4"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 4"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 4"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 4"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 5"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 5"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 5"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 5"/>
+  <w:LsdException Locked="false" Priority="46"
+   Name="List Table 1 Light Accent 6"/>
+  <w:LsdException Locked="false" Priority="47" Name="List Table 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="48" Name="List Table 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="49" Name="List Table 4 Accent 6"/>
+  <w:LsdException Locked="false" Priority="50" Name="List Table 5 Dark Accent 6"/>
+  <w:LsdException Locked="false" Priority="51"
+   Name="List Table 6 Colorful Accent 6"/>
+  <w:LsdException Locked="false" Priority="52"
+   Name="List Table 7 Colorful Accent 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Mention"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Smart Hyperlink"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Hashtag"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Unresolved Mention"/>
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Wingdings;
+	panose-1:5 0 0 0 0 0 0 0 0 0;
+	mso-font-charset:2;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:0 268435456 0 0 -2147483648 0;}
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-pitch:variable;
+	mso-font-signature:-536869121 1107305727 33554432 0 415 0;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:-536859905 -1073732485 9 0 511 0;}
+@font-face
+	{font-family:URWBookmanL-Ligh;
+	panose-1:0 0 0 0 0 0 0 0 0 0;
+	mso-font-alt:Calibri;
+	mso-font-charset:0;
+	mso-generic-font-family:auto;
+	mso-font-format:other;
+	mso-font-pitch:auto;
+	mso-font-signature:3 0 0 0 1 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:8.0pt;
+	margin-left:0cm;
+	line-height:107%;
+	mso-pagination:widow-orphan;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;
+	mso-fareast-language:EN-US;}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	mso-themecolor:hyperlink;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	color:#954F72;
+	mso-themecolor:followedhyperlink;
+	text-decoration:underline;
+	text-underline:single;}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+	{mso-style-priority:34;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:8.0pt;
+	margin-left:36.0pt;
+	mso-add-space:auto;
+	line-height:107%;
+	mso-pagination:widow-orphan;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;
+	mso-fareast-language:EN-US;}
+p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst
+	{mso-style-priority:34;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-type:export-only;
+	margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:0cm;
+	margin-left:36.0pt;
+	margin-bottom:.0001pt;
+	mso-add-space:auto;
+	line-height:107%;
+	mso-pagination:widow-orphan;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;
+	mso-fareast-language:EN-US;}
+p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle
+	{mso-style-priority:34;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-type:export-only;
+	margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:0cm;
+	margin-left:36.0pt;
+	margin-bottom:.0001pt;
+	mso-add-space:auto;
+	line-height:107%;
+	mso-pagination:widow-orphan;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;
+	mso-fareast-language:EN-US;}
+p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast
+	{mso-style-priority:34;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-type:export-only;
+	margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:8.0pt;
+	margin-left:36.0pt;
+	mso-add-space:auto;
+	line-height:107%;
+	mso-pagination:widow-orphan;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;
+	mso-fareast-language:EN-US;}
+span.Mencinsinresolver1
+	{mso-style-name:"Mención sin resolver1";
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	color:#605E5C;
+	background:#E1DFDD;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	mso-default-props:yes;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-fareast-font-family:Calibri;
+	mso-fareast-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;
+	mso-fareast-language:EN-US;}
+.MsoPapDefault
+	{mso-style-type:export-only;
+	margin-bottom:8.0pt;
+	line-height:107%;}
+@page WordSection1
+	{size:612.0pt 792.0pt;
+	margin:70.85pt 3.0cm 70.85pt 3.0cm;
+	mso-header-margin:35.4pt;
+	mso-footer-margin:35.4pt;
+	mso-paper-source:0;}
+div.WordSection1
+	{page:WordSection1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:220797322;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-148733154 604635139 604635139 604635141 604635139 604635139 604635141 604635137 604635139 604635141;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l0:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l1
+	{mso-list-id:250892642;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1608311954 604635151 604635161 604635163 604635151 604635161 604635163 604635151 604635161 604635163;}
+@list l1:level1
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l1:level2
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l1:level3
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+@list l1:level4
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l1:level5
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l1:level6
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+@list l1:level7
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l1:level8
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l1:level9
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+@list l2
+	{mso-list-id:559168959;
+	mso-list-type:hybrid;
+	mso-list-template-ids:7497308 604635147 -1774393062 604635139 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l2:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l2:level2
+	{mso-level-start-at:4;
+	mso-level-number-format:bullet;
+	mso-level-text:\F0E8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:Arial;}
+@list l2:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l2:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l2:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l2:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l2:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l2:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l2:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l3
+	{mso-list-id:593780821;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1114201680 604635139 604635139 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l3:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:71.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l3:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:107.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l3:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:143.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l3:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:179.4pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l3:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:215.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l3:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:251.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l3:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:287.4pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l3:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:323.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l3:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:359.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l4
+	{mso-list-id:632371168;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1288174608 604635139 604635139 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l4:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:124.8pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l4:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:160.8pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l4:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:196.8pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l4:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:232.8pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l4:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:268.8pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l4:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:304.8pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l4:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:340.8pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l4:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:376.8pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l4:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:412.8pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l5
+	{mso-list-id:733893951;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1017278468 604635139 604635139 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l5:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:71.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l5:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:107.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l5:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:143.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l5:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:179.4pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l5:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:215.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l5:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:251.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l5:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:287.4pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l5:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:323.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l5:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:359.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l6
+	{mso-list-id:773087894;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-280865136 604635147 -1774393062 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l6:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l6:level2
+	{mso-level-start-at:4;
+	mso-level-number-format:bullet;
+	mso-level-text:\F0E8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:Arial;}
+@list l6:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l6:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l6:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l6:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l6:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l6:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l6:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l7
+	{mso-list-id:847408232;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1562147598 604635139 604635139 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l7:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l7:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l7:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l7:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l7:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l7:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l7:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l7:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l7:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l8
+	{mso-list-id:921984826;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1329718498 604635147 604635139 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l8:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:53.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l8:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:89.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l8:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:125.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l8:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:161.4pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l8:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:197.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l8:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:233.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l8:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:269.4pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l8:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:305.4pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l8:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:341.4pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l9
+	{mso-list-id:956569777;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-744559716 604635147 -1774393062 604635141 604635139 604635139 604635141 604635137 604635139 604635141;}
+@list l9:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l9:level2
+	{mso-level-start-at:4;
+	mso-level-number-format:bullet;
+	mso-level-text:\F0E8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:Arial;}
+@list l9:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l9:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l9:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l9:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l9:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l9:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l9:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l10
+	{mso-list-id:1358003949;
+	mso-list-type:hybrid;
+	mso-list-template-ids:635622076 604635137 604635139 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l10:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l10:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l10:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l10:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l10:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l10:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l10:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l10:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l10:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l11
+	{mso-list-id:1389650426;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1024396126 604635147 604635139 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l11:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l11:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l11:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l11:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l11:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l11:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l11:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l11:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l11:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l12
+	{mso-list-id:1692611919;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-626377096 604635151 604635161 604635163 604635151 604635161 604635163 604635151 604635161 604635163;}
+@list l12:level1
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l12:level2
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l12:level3
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+@list l12:level4
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l12:level5
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l12:level6
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+@list l12:level7
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l12:level8
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l12:level9
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+@list l13
+	{mso-list-id:2072655147;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1064778594 604635139 604635139 604635141 604635137 604635139 604635141 604635137 604635139 604635141;}
+@list l13:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:88.8pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l13:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:124.8pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l13:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:160.8pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l13:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:196.8pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l13:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:232.8pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l13:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:268.8pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l13:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:304.8pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l13:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:340.8pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l13:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	margin-left:376.8pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+ol
+	{margin-bottom:0cm;}
+ul
+	{margin-bottom:0cm;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Tabla normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-parent:"";
+	mso-padding-alt:0cm 5.4pt 0cm 5.4pt;
+	mso-para-margin-top:0cm;
+	mso-para-margin-right:0cm;
+	mso-para-margin-bottom:8.0pt;
+	mso-para-margin-left:0cm;
+	line-height:107%;
+	mso-pagination:widow-orphan;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-ascii-theme-font:minor-latin;
+	mso-hansi-font-family:Calibri;
+	mso-hansi-theme-font:minor-latin;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-theme-font:minor-bidi;
+	mso-fareast-language:EN-US;}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="1026"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=ES-CO link="#0563C1" vlink="#954F72" style='tab-interval:35.4pt'>
+
+<div class=WordSection1>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:12.0pt;line-height:
+107%;font-family:"Arial",sans-serif'>Abstracción WHAT- WHY – <span class=GramE>HOW
+:</span><o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>Fuente de
+datos: <span class=MsoHyperlink><a
+href="https://www.policia.gov.co/grupo-informaci%C3%B3n-criminalidad/estadistica-delictiva">https://www.policia.gov.co/grupo-informaci%C3%B3n-criminalidad/estadistica-delictiva</a></span>.</p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>El data set corresponde
+al hurto de viviendas hasta octubre 2018, suministrado por la estadística
+delictiva de la policía nacional de Colombia.<span style='mso-spacerun:yes'> 
+</span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>Este set de
+datos contiene la información sobre los hurtos a viviendas reportados
+diariamente en los municipios y departamentos de Colombia para ese año.<u><o:p></o:p></u></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'>Descripción
+de acuerdo con <span class=SpellE>FrameWork</span> de Tamara <span
+class=SpellE>Munzner</span>:</p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><b
+style='mso-bidi-font-weight:normal'>WHAT:<o:p></o:p></b></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto;text-indent:-18.0pt;mso-list:l6 level1 lfo1'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Data
+and <span class=SpellE>Dataset</span> <span class=SpellE>Types</span>:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:72.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l6 level2 lfo1'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>è<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Data
+Set <span class=SpellE>Type</span> Temporal: <span
+style='mso-spacerun:yes'> </span>– <span class=SpellE>Items</span> – Atributes:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:108.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l2 level3 lfo7'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Data
+Set <span class=GramE>con <span style='mso-spacerun:yes'> </span>34187</span> Ítems
+y 19 Atributos.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:108.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l2 level3 lfo7'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Atributos
+usados en la Visualización:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level4 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=GramE><span style='font-family:"Arial",sans-serif'>Fecha
+:</span></span><span style='font-family:"Arial",sans-serif'><span
+style='mso-spacerun:yes'>  </span>Ordenado– Cuantitativo -&gt; Secuencia <o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:180.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level5 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>En
+formato:<span style='mso-spacerun:yes'>  </span>Dia/mes/Año, corresponde al día
+del evento de hurto.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level4 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Armas:
+Categórico.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:180.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level5 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Conformado
+por 10 categorías correspondiente a las Armas utilizadas para cometer los
+ilícitos.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:180.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level5 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Formato
+<span class=SpellE>String</span>.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level4 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Can_<u>Evento</u></span></span><span style='font-family:
+"Arial",sans-serif'>: Ordenado-&gt; Cuantitativo -&gt; Secuencial<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:180.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level5 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Como
+resultado del proceso de derivación y agregación de datos.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:180.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level5 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Corresponde
+a la cantidad de eventos reportado en un día para una categoría en particular.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:180.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l9 level5 lfo8'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Formato
+Numérico.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:72.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l6 level2 lfo1'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>è<span style='font:7.0pt "Times New Roman"'>
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Cada
+registro corresponde a un evento reportado de hurto a vivienda y su modus
+operandi.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:126.0pt;margin-bottom:.0001pt'><span style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><b
+style='mso-bidi-font-weight:normal'>WHY:<o:p></o:p></b></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto;text-indent:-18.0pt;mso-list:l11 level1 lfo6;tab-stops:153.95pt'><![if !supportLists]><span
+style='font-size:10.0pt;line-height:107%;font-family:Wingdings;mso-fareast-font-family:
+Wingdings;mso-bidi-font-family:Wingdings'><span style='mso-list:Ignore'>Ø<span
+style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>Tarea
+Principal:</span><span style='font-size:10.0pt;line-height:107%;font-family:
+URWBookmanL-Ligh;mso-bidi-font-family:URWBookmanL-Ligh'><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto'><span style='font-size:11.5pt;line-height:107%;font-family:
+"Arial",sans-serif'>Se quiere establecer que épocas del año están asociados a
+más delitos de hurto de vivienda y su modus operandi.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt;margin-bottom:.0001pt'><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraph style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto;text-indent:-18.0pt;mso-list:l11 level1 lfo6;tab-stops:153.95pt'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:Wingdings;mso-fareast-font-family:
+Wingdings;mso-bidi-font-family:Wingdings'><span style='mso-list:Ignore'>Ø<span
+style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>Tarea
+Secundaria:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt;margin-bottom:.0001pt'><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Se quiere establecer qué tipo
+de armas son las más usadas por los criminales para llevar acabo hurtos de
+viviendas, con el fin de informar a la comunidad como mejor protegerse de este
+flagelo.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt;margin-bottom:.0001pt'><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt;margin-bottom:.0001pt'><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraph style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto;text-indent:-18.0pt;mso-list:l11 level1 lfo6;tab-stops:153.95pt'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:Wingdings;mso-fareast-font-family:
+Wingdings;mso-bidi-font-family:Wingdings'><span style='mso-list:Ignore'>Ø<span
+style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>De
+acuerdo con el <span class=SpellE>framework</span> de Tamara, las tareas
+propuestas por el usuario se logran realizar de mejor manera mediante una visualización
+que permita:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt;margin-bottom:.0001pt'><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Analyze</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -&gt;
+Produce -&lt; Derive -&gt; <span class=SpellE>Features</span>:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Con el fin de que la visualización ayude a
+cumplir con las tareas planteadas, y dadas las características del Data Set, se
+requiere de derivar una variable <o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>que
+agregue la cantidad de eventos presentados por día para cada una de las armas
+empleadas, denominada cantidad eventos (</span><span class=SpellE><span
+style='font-family:"Arial",sans-serif'>Can_Evento</span></span><span
+style='font-family:"Arial",sans-serif'>).</span><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Query</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -&gt;
+<span class=SpellE><span class=GramE>Summarize</span></span><span class=GramE> <span
+style='mso-spacerun:yes'> </span>-</span>&gt; <span class=SpellE>Features</span>
+: <o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'><span style='mso-spacerun:yes'> </span>Ver el
+comportamiento global de las variables y sus características asociadas en el
+tiempo.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span class=GramE><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>Query</span></span></span><span
+class=GramE><span style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>
+.</span></span><span style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>&gt;
+<span class=SpellE>Identify</span><span style='mso-spacerun:yes'>  </span>-&gt;
+<span class=SpellE>Outliers</span> :<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Ver qué características o variables son más
+atípicas en el hurto de viviendas.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Query</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -
+&gt; Compare -&gt; <span class=SpellE><span class=GramE>Trends</span></span><span
+class=GramE> :</span><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Comparar tendencias de las variables
+seleccionadas e implicadas en el hurto a viviendas.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Query</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -
+&gt; Compare -&gt; <span class=SpellE>Distribution</span>:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Compara la distribución de <span class=GramE>las
+variable</span> seleccionas e implicadas en el hurto a viviendas<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Search</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -&gt;
+<span class=SpellE>Browse</span> -&gt; <span class=SpellE><span class=GramE>Similarity</span></span><span
+class=GramE> :</span><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Buscar para un mes en particular el
+comportamiento de las variables más representativas del modus operandi en los
+hurtos de viviendas.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Conozco la localización del mes, pero no de las
+variables en la visualización<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Search</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -&gt;
+<span class=SpellE>Browse</span> -&gt; Extremes:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Buscar para un mes en particular que variable
+son las que tiene valores máximos.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt;margin-bottom:.0001pt'><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>T<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:35.4pt;margin-bottom:.0001pt'><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto;text-indent:-18.0pt;mso-list:l11 level1 lfo6;tab-stops:153.95pt'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:Wingdings;mso-fareast-font-family:
+Wingdings;mso-bidi-font-family:Wingdings'><span style='mso-list:Ignore'>Ø<span
+style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+class=SpellE><b style='mso-bidi-font-weight:normal'><span style='font-size:
+11.5pt;line-height:107%;font-family:"Arial",sans-serif'>Insights</span></b></span><b
+style='mso-bidi-font-weight:normal'><span style='font-size:11.5pt;line-height:
+107%;font-family:"Arial",sans-serif'>:<o:p></o:p></span></b></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'><span style='mso-spacerun:yes'> </span>El
+empleo de armas de cualquier tipo es el modus operandi que en marca el delito
+de hurto a vivienda.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Los periodos del año donde más delitos se
+cometen de este tipo coiciden con los tiempos de vacaciones.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Las personas no suelen enterarse del tipo de
+armas que se usaron para cometer el delito de hurto a sus viviendas.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><b
+style='mso-bidi-font-weight:normal'>HOW:<o:p></o:p></b></p>
+
+<p class=MsoListParagraph style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto;text-indent:-18.0pt;mso-list:l11 level1 lfo6;tab-stops:153.95pt'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:Wingdings;mso-fareast-font-family:
+Wingdings;mso-bidi-font-family:Wingdings'><span style='mso-list:Ignore'>Ø<span
+style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>Las
+tareas planteadas se logran cumplir mediante los siguientes <span class=GramE>IDIOMS
+:</span><o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><b
+style='mso-bidi-font-weight:normal'><o:p>&nbsp;</o:p></b></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto;text-indent:-18.0pt;mso-list:l12 level1 lfo11'><![if !supportLists]><b
+style='mso-bidi-font-weight:normal'><span style='mso-bidi-font-family:Calibri;
+mso-bidi-theme-font:minor-latin'><span style='mso-list:Ignore'>1.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span></b><![endif]><span
+class=SpellE><b style='mso-bidi-font-weight:normal'>StreamGraph</b></span><b
+style='mso-bidi-font-weight:normal'> <o:p></o:p></b></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Permite
+ver por capas los valores de cada categoría del modus operandi en el hurto de
+viviendas.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Query</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -&gt;
+<span class=SpellE><span class=GramE>Summarize</span></span><span class=GramE> <span
+style='mso-spacerun:yes'> </span>-</span>&gt; <span class=SpellE>Features</span>.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Query</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -
+&gt; Compare -&gt; <span class=SpellE><span class=GramE>Trends</span></span><span
+class=GramE>..</span><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Query</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -
+&gt; Compare -&gt; <span class=SpellE>Distribution</span>.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><span style='mso-spacerun:yes'> </span><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Marcas:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:88.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level1 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Áreas.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Canales:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:88.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level1 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'><span
+style='mso-spacerun:yes'> </span>Atributo ordenado cuantitativo <span
+class=GramE>secuencial, <span style='mso-spacerun:yes'> </span>Fecha</span>:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Canal
+de magnitud.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Posición
+Horizontal.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Escala
+de tiempo.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:88.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level1 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Atributo
+Categórico Armas:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Representa
+Aristas en el <span class=SpellE>streamgraph</span>.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Identity</span></span><span style='font-family:"Arial",sans-serif'>
+Chanel: Color <span class=SpellE>Hue</span>, identifica el área (<span
+class=SpellE>counts</span>) por categoría.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:88.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level1 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Atributo
+derivado <span class=SpellE>Can_Evento</span>:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:124.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level2 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Corresponde
+<span class=SpellE>counts</span> por categoría.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:88.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level1 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Datos
+derivados<span style='mso-spacerun:yes'>  </span><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:124.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level2 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Describe
+la geometría, con capas horizontales (<span class=SpellE>stack</span>) que codifica
+los <span class=SpellE>counts</span> por categoría.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:124.8pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Encode</span></span><span style='font-family:"Arial",sans-serif'>
+<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Expresse</span></span><span style='font-family:"Arial",sans-serif'>:
+atributo ordenado cuantitativo fecha.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Separate</span></span><span style='font-family:"Arial",sans-serif'>,
+<span class=SpellE><span class=GramE>order</span></span><span class=GramE> :</span>
+En regiones horizontales <span style='mso-spacerun:yes'> </span>categóricas que
+representan las áreas de los diferentes modus operandi.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Facet</span></span><span style='font-family:"Arial",sans-serif'>:
+<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Capas
+<span class=SpellE>Juxtapose</span><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Manipulate</span></span><span style='font-family:"Arial",sans-serif'><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span class=GramE><span
+style='font-family:"Arial",sans-serif'>Select</span></span></span><span
+class=GramE><span style='font-family:"Arial",sans-serif'> :</span></span><span
+style='font-family:"Arial",sans-serif'> seleccionar área categórica, muestra el
+valor total (<span class=SpellE>counts</span>) d <span class=SpellE>ela</span>
+capa seleccionada.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:71.4pt;margin-bottom:.0001pt'><span style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><span style='mso-tab-count:2'>                        </span><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:0cm;margin-bottom:.0001pt;
+mso-add-space:auto;text-indent:-18.0pt;mso-list:l12 level1 lfo11'><![if !supportLists]><b
+style='mso-bidi-font-weight:normal'><span style='mso-bidi-font-family:Calibri;
+mso-bidi-theme-font:minor-latin'><span style='mso-list:Ignore'>2.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span></b><![endif]><span
+class=SpellE><b style='mso-bidi-font-weight:normal'>Multi-line</b></span><b
+style='mso-bidi-font-weight:normal'> chart<o:p></o:p></b></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Presenta
+las tendencias en el tiempo del modus operandi en el hurto a viviendas:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Query</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -
+&gt; Compare -&gt; <span class=SpellE>Trends</span>.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Search</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -&gt;
+<span class=SpellE>Browse</span> -&gt; <span class=SpellE>Similarity</span>.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-size:11.5pt;
+line-height:107%;font-family:"Arial",sans-serif'>Search</span></span><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'> -&gt;
+<span class=SpellE>Browse</span> -&gt; Extremes:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-size:12.0pt;mso-bidi-font-size:11.0pt;line-height:107%;font-family:
+Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:Wingdings'><span
+style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-size:12.0pt;mso-bidi-font-size:11.0pt;line-height:107%;font-family:
+"Arial",sans-serif'>Marcas<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-size:12.0pt;mso-bidi-font-size:11.0pt;line-height:107%;font-family:
+"Courier New";mso-fareast-font-family:"Courier New"'><span style='mso-list:
+Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp; </span></span></span><![endif]><span
+style='font-size:12.0pt;mso-bidi-font-size:11.0pt;line-height:107%;font-family:
+"Arial",sans-serif'>Líneas.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-size:12.0pt;mso-bidi-font-size:11.0pt;line-height:107%;font-family:
+Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:Wingdings'><span
+style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp; </span></span></span><![endif]><span
+style='font-size:12.0pt;mso-bidi-font-size:11.0pt;line-height:107%;font-family:
+"Arial",sans-serif'>Canales<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:88.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level1 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Atributo
+ordenado cuantitativo secuencial Fecha:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Canal
+de magnitud.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Posición
+Horizontal.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Escala
+de tiempo<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:88.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level1 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Atributo
+ordenado cuantitativo secuencia <span class=SpellE>Can_<u>Evento</u></span>:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Canal
+de magnitud.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Posición
+Vertical.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Escala
+de Lineal<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:88.8pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l13 level1 lfo4'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Atributo
+Categórico Armas<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l0 level4 lfo13'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-family:"Arial",sans-serif'>Canal
+de Identidad: Color <span class=SpellE>Hue</span>:<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-family:"Arial",sans-serif'>Dado que las categorías son 10 y
+conservando el principio de expresividad se utiliza schemeCategory10. <o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:144.0pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Encode</span></span><span style='font-family:"Arial",sans-serif'>
+<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Expresse</span></span><span style='font-family:"Arial",sans-serif'>:
+atributo ordenado cuantitativo fecha y <span class=SpellE>Can_<u>Evento</u></span>.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Separate</span></span><span style='font-family:"Arial",sans-serif'>,
+<span class=SpellE><span class=GramE>order</span></span><span class=GramE> :</span>
+Separación en regiones horizontales <span
+style='mso-spacerun:yes'> </span>espaciales para la línea de tiempo de cada
+categoría y ordenándolas por la variable cuantitativa <span class=SpellE>Can_<u>Evento</u></span><u>.</u><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:53.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level1 lfo5'><![if !supportLists]><span
+style='font-family:Wingdings;mso-fareast-font-family:Wingdings;mso-bidi-font-family:
+Wingdings'><span style='mso-list:Ignore'>Ø<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span></span></span><![endif]><span class=SpellE><span style='font-family:
+"Arial",sans-serif'>Manipulate</span></span><span style='font-family:"Arial",sans-serif'><o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l8 level2 lfo5'><![if !supportLists]><span
+style='font-family:"Courier New";mso-fareast-font-family:"Courier New"'><span
+style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span class=SpellE><span class=GramE><span
+style='font-family:"Arial",sans-serif'>Select</span></span></span><span
+class=GramE><span style='font-family:"Arial",sans-serif'> :</span></span><span
+style='font-family:"Arial",sans-serif'> seleccionar área categórica<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-family:"Arial",sans-serif'>Interacción mediante deslizamiento <span
+class=GramE>eje <span style='mso-spacerun:yes'> </span>horizontal</span>
+de<span style='mso-spacerun:yes'>  </span>la variable cuantitativa tiempo, que
+muestra los valores (<span class=SpellE>counts</span>) de la categorías<span
+style='mso-spacerun:yes'>  </span>para la fecha indicada.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:71.4pt;margin-bottom:.0001pt'><span style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:18.0pt;margin-bottom:.0001pt;tab-stops:153.95pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:11.5pt;line-height:
+107%;font-family:"Arial",sans-serif'>INSIGHTS VISUALIZACION:<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:18.0pt;margin-bottom:.0001pt;tab-stops:153.95pt'><b
+style='mso-bidi-font-weight:normal'><span style='font-size:11.5pt;line-height:
+107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>El empleo de armas de cualquier tipo es el
+modus operandi que en marca el delito de hurto a vivienda.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>La visualización revela que generalmente no se
+emplean armas para el hurto de viviendas, cual sugiere que es un acto
+previamente estudiado<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'>basado
+en el perfil de las posibles víctimas, hay que estar atentos a que información
+personal se está entregando en las diferentes actividades sociales.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Los periodos del año donde más delitos se
+cometen de este tipo coinciden con los tiempos de vacaciones.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Se observa que curiosamente que el periodo de inicio
+de año es el mas propensos al hurto de viviendas, por lo cual es recomendable en
+lo posible no dejar las viviendas solas en este periodo.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>También se observa un pico en el mes de junio.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Las personas no suelen enterarse del tipo de
+armas que se usaron para cometer el delito de hurto a sus viviendas.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level2 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Comparando la distribución de las armas utilizadas
+en el hurto a viviendas principalmente en <span class=SpellE>streamgraph</span>,
+los casos que no reportan el tipo de arma utilizad no son significativos,<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'><span
+style='mso-spacerun:yes'> </span>frente a la distribución de los otros eventos.
+Curiosamente también de esta misma visualización los casos en los que se usa
+arma de fuego <span class=GramE>es</span> muy baja.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:107.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto;
+text-indent:-18.0pt;mso-list:l5 level1 lfo9'><![if !supportLists]><span
+style='font-size:11.5pt;line-height:107%;font-family:"Courier New";mso-fareast-font-family:
+"Courier New"'><span style='mso-list:Ignore'>o<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
+</span></span></span><![endif]><span style='font-size:11.5pt;line-height:107%;
+font-family:"Arial",sans-serif'>Se observa un atendencia a la baja en el hurto
+de viviendas para el mes de septiembre (<span class=SpellE>streamgraph</span>)<span
+style='mso-spacerun:yes'>  </span>esto puede ser debido que para el momento del
+reporte no se hayan registrado todos los casos.<o:p></o:p></span></p>
+
+<p class=MsoListParagraphCxSpMiddle style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-top:0cm;margin-right:0cm;
+margin-bottom:0cm;margin-left:71.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:11.5pt;line-height:107%;font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal style='margin-top:0cm;margin-right:0cm;margin-bottom:0cm;
+margin-left:71.4pt;margin-bottom:.0001pt'><span style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoListParagraph style='margin-top:0cm;margin-right:0cm;margin-bottom:
+0cm;margin-left:89.4pt;margin-bottom:.0001pt;mso-add-space:auto'><span
+style='font-size:12.0pt;mso-bidi-font-size:11.0pt;line-height:107%;font-family:
+"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-bottom:0cm;margin-bottom:.0001pt'><span
+style='font-family:"Arial",sans-serif'><o:p>&nbsp;</o:p></span></p>
+
+</div>
+
+</body>
+
+</html>
